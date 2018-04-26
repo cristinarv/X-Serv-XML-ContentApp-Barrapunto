@@ -10,4 +10,5 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', views.inicio_pag, name = "Listado de las paginas"),
     url(r'^pagina/(\d+)$', views.pag),
+    url(r'^update', views.update, name = "Muestrame la pagina seleccionada"),
 )

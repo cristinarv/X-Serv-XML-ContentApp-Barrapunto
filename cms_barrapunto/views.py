@@ -9,6 +9,15 @@ from xml.sax import make_parser
 import sys
 import urllib.request
 
+FORMULARIO= """
+<form action="" method="POST">
+    <u><b>Name: </b></ul><br><input type="text" name="name"><br>
+    <u><b>Page: </b></ul><br><input type="text" name="page"/><br>
+    <input type="submit" value="Enviar"/>
+</form>"""
+
+contenido_Rss = ""
+
 class myContentHandler(ContentHandler):
 
     def __init__ (self):
@@ -26,6 +35,7 @@ class myContentHandler(ContentHandler):
                 self.inContent = True
             
     def endElement (self, name):
+        global contenido_Rss
         if name == 'item':
             self.inItem = False
         elif self.inItem:
@@ -37,8 +47,10 @@ class myContentHandler(ContentHandler):
                 self.theContent = ""
             elif name == 'link':
                 self.link = " Link: " + self.theContent + "."
-                htmlFile.write("<a href=" + self.theContent + ">" + self.title + "</a><br>\n")
-                print(self.link)
+                contenido_Rss += "<ul><li>"
+                contenido_Rss += "<a href=" + self.theContent + ">"
+                contenido_Rss += self.title + "</a><br>\n"
+                contenido_Rss += "</ul></li>"
                 self.inContent = False
                 self.theContent = ""
 
@@ -52,6 +64,7 @@ def inicio_pag(request):
     for pag in list_pags:
         resp +=  "<ul><li>" + pag.name + " ==> " + pag.page + "</ul></li>"
     return HttpResponse(resp)
+ 
   
 @csrf_exempt
 def pag(request, ident):
@@ -59,10 +72,11 @@ def pag(request, ident):
         try:
 			# Cuando existe
             page = Pages.objects.get(name=ident)
-            resp = "La página que has pedido es: " + page.name + " ==> " + page.page	
+            resp = "La página que has pedido es: " + page.name + " ==> " + page.page
+            resp +=	"<br>Su contenido es" + contenido_Rss
         except Pages.DoesNotExist:
 			# Cuando no existe
-            resp = "Esta página no existe"          
+            resp = "Esta página no existe, puedes crearla:" + FORMULARIO    
     elif request.method == "POST":
         name = request.POST['name']
         page = request.POST['page']
@@ -72,4 +86,16 @@ def pag(request, ident):
         
     else:
         resp = "Método no permitido"
+    return HttpResponse(resp)
+
+
+def update(request):
+    theParser = make_parser()
+    theHandler = myContentHandler()
+    theParser.setContentHandler(theHandler)
+    url = "http://barrapunto.com/index.rss"
+    fich = urllib.request.urlopen(url)
+    theParser.parse(fich)
+    resp = "<html><body><div>Las noticias que hay son: " + contenido_Rss
+    resp += "</div></body></html>"
     return HttpResponse(resp)
