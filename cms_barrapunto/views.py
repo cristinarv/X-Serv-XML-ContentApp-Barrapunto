@@ -9,7 +9,8 @@ from xml.sax import make_parser
 import sys
 import urllib.request
 
-FORMULARIO= """
+
+FORMULARIO = """
 <form action="" method="POST">
     <u><b>Name: </b></ul><br><input type="text" name="name"><br>
     <u><b>Page: </b></ul><br><input type="text" name="page"/><br>
@@ -18,14 +19,15 @@ FORMULARIO= """
 
 contenido_Rss = ""
 
+
 class myContentHandler(ContentHandler):
 
-    def __init__ (self):
+    def __init__(self):
         self.inItem = False
         self.inContent = False
         self.theContent = ""
 
-    def startElement (self, name, attrs):
+    def startElement(self, name, attrs):
         if name == 'item':
             self.inItem = True
         elif self.inItem:
@@ -33,8 +35,8 @@ class myContentHandler(ContentHandler):
                 self.inContent = True
             elif name == 'link':
                 self.inContent = True
-            
-    def endElement (self, name):
+
+    def endElement(self, name):
         global contenido_Rss
         if name == 'item':
             self.inItem = False
@@ -47,43 +49,44 @@ class myContentHandler(ContentHandler):
                 self.theContent = ""
             elif name == 'link':
                 self.link = " Link: " + self.theContent + "."
-                contenido_Rss += "<ul><li>"
-                contenido_Rss += "<a href=" + self.theContent + ">"
-                contenido_Rss += self.title + "</a><br>\n"
-                contenido_Rss += "</ul></li>"
+                contenido_Rss += "<ul><li><a href=" + self.theContent + ">"
+                contenido_Rss += self.title + "</a><br>\n</ul></li>"
                 self.inContent = False
                 self.theContent = ""
 
-    def characters (self, chars):
+    def characters(self, chars):
         if self.inContent:
             self.theContent = self.theContent + chars
+
 
 def inicio_pag(request):
     resp = "<u><h4>La lista de las paginas es:</h4></u>"
     list_pags = Pages.objects.all()
     for pag in list_pags:
-        resp +=  "<ul><li>" + pag.name + " ==> " + pag.page + "</ul></li>"
+        resp += "<ul><li>" + pag.name + " ==> " + pag.page + "</ul></li>"
     return HttpResponse(resp)
- 
-  
+
+
 @csrf_exempt
 def pag(request, ident):
     if request.method == "GET":
         try:
-			# Cuando existe
+            # Cuando existe
             page = Pages.objects.get(name=ident)
-            resp = "La página que has pedido es: " + page.name + " ==> " + page.page
-            resp +=	"<br>Su contenido es" + contenido_Rss
+            resp = "La página que has pedido es: "
+            resp += page.name + " ==> " + page.page
+            resp += "<br><br><u>Su <b>contenido</b> es:</u> " + contenido_Rss
         except Pages.DoesNotExist:
-			# Cuando no existe
-            resp = "Esta página no existe, puedes crearla:" + FORMULARIO    
+            # Cuando no existe
+            resp = "Esta página no existe, puedes crearla:" + FORMULARIO
+
     elif request.method == "POST":
         name = request.POST['name']
         page = request.POST['page']
         pagina = Pages(name=name, page=page)
         pagina.save()
-        resp = "Has creado la página: <b>" + name + "</b><br> Su id es : <b>" + str(pagina.id) + "</b>"
-        
+        resp = "Has creado la página: <b>" + name
+        resp += "</b><br> Su id es : <b>" + str(pagina.id) + "</b>"
     else:
         resp = "Método no permitido"
     return HttpResponse(resp)
