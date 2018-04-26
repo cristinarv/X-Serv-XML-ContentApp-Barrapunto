@@ -1,6 +1,6 @@
-# Cristina del Río 
+# Cristina del Río
 from django.shortcuts import render
-from cms_users_put.models import Pages
+from cms_barrapunto.models import Pages
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.

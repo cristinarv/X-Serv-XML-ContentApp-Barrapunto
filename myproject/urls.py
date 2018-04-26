@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.contrib import admin
-from cms_users_put import views
+from cms_barrapunto import views
 from django.contrib.auth.views import logout, login
 
 urlpatterns = patterns('',
